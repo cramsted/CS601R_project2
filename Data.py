@@ -26,9 +26,7 @@ class Data(Dataset):
         # data
         imgData = cv2.cvtColor(cv2.imread(
             self._data[index]), cv2.COLOR_BGR2RGB)
-        imgData = cv2.resize(imgData, (224, 224))
-        imgData = np.array(
-            [imgData[:, :, 0, ], imgData[:, :, 1], imgData[:, :, 2]])
+        imgData = np.transpose(cv2.resize(imgData, (224, 224)), (2, 0, 1))
         imgData = torch.from_numpy(imgData).float()
         # labels
         imgLabel = cv2.cvtColor(cv2.imread(

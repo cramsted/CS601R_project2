@@ -78,60 +78,60 @@ class SegNet(nn.Module):
         return num_features
 
 
-if __name__ == '__main__':
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(device)
-    seg = SegNet()
-    seg.to(device)
-    try:
-        seg.load_state_dict(torch.load('model.json'))
-    except:
-        pass
-    dataset = Data(TRAIN_DATA, TRAIN_DATA_LABEL)
-    loader = DataLoader(dataset, batch_size=22, shuffle=True, num_workers=10)
+# if __name__ == '__main__':
+#     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#     print(device)
+#     seg = SegNet()
+#     seg.to(device)
+#     try:
+#         seg.load_state_dict(torch.load('model.json'))
+#     except:
+#         pass
+#     dataset = Data(TRAIN_DATA, TRAIN_DATA_LABEL)
+#     loader = DataLoader(dataset, batch_size=22, shuffle=True, num_workers=10)
 
-    criterion = nn.CrossEntropyLoss()
-    # optimizer = optim.SGD(seg.parameters(), lr=5e-4, momentum=0.9)
-    optimizer = optim.Adam(seg.parameters(), lr=5e-4)
-    try:
-        with open('running_loss.pkl', 'rb') as f:
-            running_loss = pickle.load(f)
-    except:
-        running_loss = []
+#     criterion = nn.CrossEntropyLoss()
+#     # optimizer = optim.SGD(seg.parameters(), lr=5e-4, momentum=0.9)
+#     optimizer = optim.Adam(seg.parameters(), lr=5e-4)
+#     try:
+#         with open('running_loss.pkl', 'rb') as f:
+#             running_loss = pickle.load(f)
+#     except:
+#         running_loss = []
 
-    very_start = time.time()
-    for epoch in range(1, 4):
-        start = time.time()
-        epoch_loss = []
-        for i, data in enumerate(loader, 0):
-            images, labels = data[0].to(device), data[1].to(device)
-            images = images.type(torch.FloatTensor).cuda()
-            labels = labels.type(torch.LongTensor).cuda()
-            # zero the parameter gradients
-            optimizer.zero_grad()
+#     very_start = time.time()
+#     for epoch in range(1, 4):
+#         start = time.time()
+#         epoch_loss = []
+#         for i, data in enumerate(loader, 0):
+#             images, labels = data[0].to(device), data[1].to(device)
+#             images = images.type(torch.FloatTensor).cuda()
+#             labels = labels.type(torch.LongTensor).cuda()
+#             # zero the parameter gradients
+#             optimizer.zero_grad()
 
-            # forward + backward + optimize
-            outputs = seg(images)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
+#             # forward + backward + optimize
+#             outputs = seg(images)
+#             loss = criterion(outputs, labels)
+#             loss.backward()
+#             optimizer.step()
 
-            # print statistics
-            loss_val = loss.item()
-            # print(i, ":", loss_val)
-            epoch_loss.append(loss_val)
+#             # print statistics
+#             loss_val = loss.item()
+#             # print(i, ":", loss_val)
+#             epoch_loss.append(loss_val)
 
-        print('[Epoch:', epoch, '] [Time:',
-              (time.time()-start)/60, " minutes] [Average loss:", np.average(epoch_loss), "]")
-        running_loss += epoch_loss
-        torch.save(seg.state_dict(), 'model.json')
-        with open('running_loss.pkl', 'wb') as f:
-            pickle.dump(running_loss, f)
-print('Finished Training in ', (time.time()-very_start)/60, " minutes")
-print("length of loss array: ", len(running_loss))
+#         print('[Epoch:', epoch, '] [Time:',
+#               (time.time()-start)/60, " minutes] [Average loss:", np.average(epoch_loss), "]")
+#         running_loss += epoch_loss
+#         torch.save(seg.state_dict(), 'model.json')
+#         with open('running_loss.pkl', 'wb') as f:
+#             pickle.dump(running_loss, f)
+# print('Finished Training in ', (time.time()-very_start)/60, " minutes")
+# print("length of loss array: ", len(running_loss))
 
-# notes:
-#  - ask about stride and padding
-#  - research or ask about the crossentropy
-#       - change labels to be single channel with all values converted to a 1-6
-#       - at each pixel location of the output you should get an array of 7 length that has the probabilities of all the categories
+# # notes:
+# #  - ask about stride and padding
+# #  - research or ask about the crossentropy
+# #       - change labels to be single channel with all values converted to a 1-6
+# #       - at each pixel location of the output you should get an array of 7 length that has the probabilities of all the categories
