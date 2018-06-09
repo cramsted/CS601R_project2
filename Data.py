@@ -28,11 +28,12 @@ class Data(Dataset):
             self._labels[index]), cv2.COLOR_BGR2GRAY)
         # random flip
         if np.random.rand() > 0.5:
-            imgData = np.flip(imgData, axis=0).copy()
-            imgLabel = np.flip(imgLabel, axis=0).copy()
+            imgData = np.flip(imgData, axis=1).copy()
+            imgLabel = np.flip(imgLabel, axis=1).copy()
         imgData, imgLabel = self.crop(imgData, imgLabel)
         # data
         imgData = np.transpose(imgData, (2, 0, 1))
+        display_image = imgData.copy()
         imgData = torch.from_numpy(imgData).float()
         # labels
         # 0 = other
@@ -43,27 +44,28 @@ class Data(Dataset):
         imgLabel[imgLabel == 210] = 5  # vechical
         imgLabel[imgLabel == 240] = 6  # person
         imgLabel = torch.from_numpy(imgLabel).float()
-        return imgData, imgLabel
+        return imgData, imgLabel, display_image
 
     def crop(self, img, label):
-        max_side = max(img.shape[:-1])
-        max_arg = np.argmax(img.shape[:-1])
         min_side = min(img.shape[:-1])
         min_arg = np.argmax(img.shape[:-1])
 
-        if max_side <= 224 or min_side <= 224:
-            img = cv2.resize(img, (224, 224))
-            label = cv2.resize(label, (224, 224),
-                               interpolation=cv2.INTER_NEAREST)
+        # resize an image shape that can be mostly covered by a 224x224 window
+        ratio = 300 / min_side
+        img = cv2.resize(img, (0, 0), fx=ratio, fy=ratio)
+        label = cv2.resize(label, (0, 0), fx=ratio, fy=ratio,
+                           interpolation=cv2.INTER_NEAREST)
+        max_side = max(img.shape[:-1])
+        max_arg = np.argmax(img.shape[:-1])
+        min_side = 300
+        max_start = np.random.randint(0, max_side - 224)
+        min_start = np.random.randint(0, min_side - 224)
+        if max_arg == 0:
+            img = img[max_start:max_start+224, min_start:min_start+224]
+            label = label[max_start:max_start+224, min_start:min_start+224]
         else:
-            max_start = np.random.randint(0, max_side - 224)
-            min_start = np.random.randint(0, min_side - 224)
-            if max_arg == 0:
-                img = img[max_start:max_start+224, min_start:min_start+224]
-                label = label[max_start:max_start+224, min_start:min_start+224]
-            else:
-                img = img[min_start:min_start+224, max_start:max_start+224]
-                label = label[min_start:min_start+224, max_start:max_start+224]
+            img = img[min_start:min_start+224, max_start:max_start+224]
+            label = label[min_start:min_start+224, max_start:max_start+224]
         return img, label
 
     def __len__(self):

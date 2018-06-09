@@ -24,8 +24,6 @@ MODEL_FILENAME = 'model3.json'
 
 def show(img):
     npimg = img.cpu().detach().numpy()
-    # import pdb
-    # pdb.set_trace()
     output = npimg[0, :, :]
     for i in range(1, 7):
         output = np.hstack((output, npimg[i, :, :]))
@@ -36,9 +34,6 @@ def convertImage(img):
     img = img.cpu().detach().numpy()
     img = np.array([img[0, :, :], img[1, :, :], img[2, :, :]])
     img = np.transpose(img, (1, 2, 0))
-    # import pdb
-    # pdb.set_trace()
-    # return cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     return img
 
 
@@ -46,13 +41,7 @@ def convertLabel(img):
     if isinstance(img, torch.Tensor):
         img = img.cpu().detach().numpy()
     img = flatten_batch(img)
-    img = np.array([img, img, img])
-    img = np.transpose(img, (1, 2, 0))
-    # return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = convertLabel2RGB(img)
-    # import pdb
-    # pdb.set_trace()
-    # img.astype(np.float64)
     return img
 
 
@@ -74,8 +63,6 @@ def convertPrediction(img):
     if isinstance(img, torch.Tensor):
         img = img.cpu().detach().numpy()
     img = flatten_batch(img)
-    img = np.array([img, img, img])
-    img = np.transpose(img, (1, 2, 0))
     return convertLabel2RGB(img)
 
 
@@ -103,7 +90,7 @@ loader = DataLoader(dataset, batch_size=5, shuffle=False)
 
 with torch.no_grad():
     for data in loader:
-        images, labels = data[0].to(device), data[1].to(device)
+        images, labels, img = data[0].to(device), data[1].to(device), data[2]
         images = images.type(torch.FloatTensor).cuda()
         labels = labels.type(torch.LongTensor).cuda()
 
@@ -113,7 +100,8 @@ with torch.no_grad():
         plt.title(MODEL_FILENAME)
         plt.subplot(311)
         plt.title("Images")
-        plt.imshow(convertImage(make_grid(images, padding=5)))
+        plt.imshow(np.transpose(
+            make_grid(img, padding=5).cpu().detach().numpy(), (1, 2, 0)))
         plt.subplot(312)
         plt.title("Labels")
         plt.imshow(convertLabel(labels))
