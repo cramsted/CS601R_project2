@@ -84,7 +84,8 @@ def test(epoch_testing_loss):
 
 
 very_start = time.time()
-for epoch in range(1, 4):
+average_test_losses = [2.0]
+for epoch in range(1, 11):
     start = time.time()
     epoch_training_loss = []
     epoch_testing_loss = []
@@ -101,5 +102,8 @@ for epoch in range(1, 4):
     torch.save(seg.state_dict(), MODEL_FILENAME)
     with open(LOSS_FILENAME, 'wb') as f:
         pickle.dump((running_loss, test_loss), f)
+    # if average_test_losses[-1] < np.average(epoch_testing_loss):
+    #     break
+    average_test_losses.append(np.average(epoch_testing_loss))
 print('Finished Training in ', (time.time()-very_start)/60, " minutes")
 print("length of loss array: ", len(running_loss))

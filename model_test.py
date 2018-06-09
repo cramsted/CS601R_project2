@@ -17,8 +17,9 @@ TRAIN_DATA_LABEL = "../mscoco_subset_cs601r/train_masks/"
 TEST_DATA = "../mscoco_subset_cs601r/test/"
 TEST_DATA_LABEL = "../mscoco_subset_cs601r/test_masks/"
 
-MODEL_FILENAME = 'model.json'
+# MODEL_FILENAME = 'model.json'
 # MODEL_FILENAME = 'model2.json'
+MODEL_FILENAME = 'model3.json'
 
 
 def show(img):
@@ -109,15 +110,15 @@ with torch.no_grad():
         prediction = seg(images)
         prediction_mask = torch.argmax(prediction, 1)
 
-        # plt.title(MODEL_FILENAME)
-        # plt.subplot(311)
-        # plt.title("Images")
-        # plt.imshow(convertImage(make_grid(images, padding=5)))
-        # plt.subplot(312)
-        # plt.title("Labels")
-        # plt.imshow(convertLabel(labels))
-        # plt.subplot(313)
-        # plt.title("Predictions")
-        # plt.imshow(convertPrediction(prediction_mask))
-        # plt.show()
-        # break
+        plt.title(MODEL_FILENAME)
+        plt.subplot(311)
+        plt.title("Images")
+        plt.imshow(convertImage(make_grid(images, padding=5)))
+        plt.subplot(312)
+        plt.title("Labels")
+        plt.imshow(convertLabel(labels))
+        plt.subplot(313)
+        plt.title("Predictions")
+        plt.imshow(convertPrediction(prediction_mask))
+        plt.show()
+        break

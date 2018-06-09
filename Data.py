@@ -33,10 +33,7 @@ class Data(Dataset):
         imgData, imgLabel = self.crop(imgData, imgLabel)
         # data
         imgData = np.transpose(imgData, (2, 0, 1))
-        try:
-            imgData = torch.from_numpy(imgData).float()
-        except:
-            print(imgData.shape)
+        imgData = torch.from_numpy(imgData).float()
         # labels
         # 0 = other
         imgLabel[imgLabel == 90] = 1  # ground
@@ -46,7 +43,6 @@ class Data(Dataset):
         imgLabel[imgLabel == 210] = 5  # vechical
         imgLabel[imgLabel == 240] = 6  # person
         imgLabel = torch.from_numpy(imgLabel).float()
-        print(imgData.size(), imgLabel.size())
         return imgData, imgLabel
 
     def crop(self, img, label):
@@ -57,7 +53,8 @@ class Data(Dataset):
 
         if max_side <= 224 or min_side <= 224:
             img = cv2.resize(img, (224, 224))
-            label = cv2.resize(label, (224, 224))
+            label = cv2.resize(label, (224, 224),
+                               interpolation=cv2.INTER_NEAREST)
         else:
             max_start = np.random.randint(0, max_side - 224)
             min_start = np.random.randint(0, min_side - 224)
