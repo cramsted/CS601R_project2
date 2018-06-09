@@ -17,6 +17,9 @@ TRAIN_DATA_LABEL = "../mscoco_subset_cs601r/train_masks/"
 TEST_DATA = "../mscoco_subset_cs601r/test/"
 TEST_DATA_LABEL = "../mscoco_subset_cs601r/test_masks/"
 
+MODEL_FILENAME = 'model.json'
+# MODEL_FILENAME = 'model2.json'
+
 
 def show(img):
     npimg = img.cpu().detach().numpy()
@@ -39,8 +42,10 @@ def convertImage(img):
 
 
 def convertLabel(img):
-    img = img.cpu().detach().numpy()
-    img = np.array([img[0], img[0], img[0]])
+    if isinstance(img, torch.Tensor):
+        img = img.cpu().detach().numpy()
+    img = flatten_batch(img)
+    img = np.array([img, img, img])
     img = np.transpose(img, (1, 2, 0))
     # return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = convertLabel2RGB(img)
@@ -64,34 +69,55 @@ def convertLabel2RGB(img):
     return img
 
 
+def convertPrediction(img):
+    if isinstance(img, torch.Tensor):
+        img = img.cpu().detach().numpy()
+    img = flatten_batch(img)
+    img = np.array([img, img, img])
+    img = np.transpose(img, (1, 2, 0))
+    return convertLabel2RGB(img)
+
+
+def flatten_batch(img):
+    if isinstance(img, torch.Tensor):
+        img = img.cpu().detach().numpy()
+
+    output = img[0]
+    for i in range(1, img.shape[0]):
+        output = np.hstack((output, img[i]))
+    return output
+
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 seg = SegNet()
 seg.to(device)
 try:
-    seg.load_state_dict(torch.load('model.json'))
+    seg.load_state_dict(torch.load(MODEL_FILENAME))
 except:
     pass
 
-dataset = Data(TRAIN_DATA, TRAIN_DATA_LABEL)
-loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
+dataset = Data(TEST_DATA, TEST_DATA_LABEL)
+loader = DataLoader(dataset, batch_size=5, shuffle=False)
 
-for data in loader:
-    images, labels = data[0].to(device), data[1].to(device)
-    images = images.type(torch.FloatTensor).cuda()
-    labels = labels.type(torch.LongTensor).cuda()
+with torch.no_grad():
+    for data in loader:
+        images, labels = data[0].to(device), data[1].to(device)
+        images = images.type(torch.FloatTensor).cuda()
+        labels = labels.type(torch.LongTensor).cuda()
 
-    prediction = seg(images)
-    prediction_mask = torch.argmax(prediction, 1)
-    prediction_mask = convertLabel2RGB(prediction_mask)
+        prediction = seg(images)
+        prediction_mask = torch.argmax(prediction, 1)
 
-    plt.subplot(411)
-    show(make_grid(prediction, padding=100))
-    plt.subplot(412)
-    plt.imshow(convertImage(images[0]))
-    plt.subplot(413)
-    plt.imshow(convertLabel(labels))
-    plt.subplot(414)
-    plt.imshow(prediction_mask[0])
-    plt.show()
-    break
+        # plt.title(MODEL_FILENAME)
+        # plt.subplot(311)
+        # plt.title("Images")
+        # plt.imshow(convertImage(make_grid(images, padding=5)))
+        # plt.subplot(312)
+        # plt.title("Labels")
+        # plt.imshow(convertLabel(labels))
+        # plt.subplot(313)
+        # plt.title("Predictions")
+        # plt.imshow(convertPrediction(prediction_mask))
+        # plt.show()
+        # break

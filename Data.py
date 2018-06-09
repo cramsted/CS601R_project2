@@ -4,7 +4,6 @@ from torch.utils.data import DataLoader
 import numpy as np
 import os
 import glob
-from PIL import Image
 import cv2
 from skimage.transform import resize
 
@@ -23,16 +22,22 @@ class Data(Dataset):
         self._labels = sorted(glob.glob(folder_labels+"*.png"))
 
     def __getitem__(self, index):
-        # data
         imgData = cv2.cvtColor(cv2.imread(
             self._data[index]), cv2.COLOR_BGR2RGB)
-        imgData = np.transpose(cv2.resize(imgData, (224, 224)), (2, 0, 1))
-        imgData = torch.from_numpy(imgData).float()
-        # labels
         imgLabel = cv2.cvtColor(cv2.imread(
             self._labels[index]), cv2.COLOR_BGR2GRAY)
-        imgLabel = cv2.resize(imgLabel, (224, 224),
-                              interpolation=cv2.INTER_NEAREST)
+        # random flip
+        if np.random.rand() > 0.5:
+            imgData = np.flip(imgData, axis=0).copy()
+            imgLabel = np.flip(imgLabel, axis=0).copy()
+        imgData, imgLabel = self.crop(imgData, imgLabel)
+        # data
+        imgData = np.transpose(imgData, (2, 0, 1))
+        try:
+            imgData = torch.from_numpy(imgData).float()
+        except:
+            print(imgData.shape)
+        # labels
         # 0 = other
         imgLabel[imgLabel == 90] = 1  # ground
         imgLabel[imgLabel == 120] = 2  # plant
@@ -41,18 +46,28 @@ class Data(Dataset):
         imgLabel[imgLabel == 210] = 5  # vechical
         imgLabel[imgLabel == 240] = 6  # person
         imgLabel = torch.from_numpy(imgLabel).float()
+        print(imgData.size(), imgLabel.size())
         return imgData, imgLabel
-    # def __getitem__(self, index):
-    #     imgData = Image.open(self._data[index]).convert("RGB")
-    #     # imgData = resize(imgData, (224, 224))
-    #     imgLabel = Image.open(self._labels[index]).convert("RGB")
-    #     # imgLabel = resize(imgLabel, (224, 224))
 
-    #     imgData = torch.from_numpy(resize(np.asarray(imgData), (224, 224)))
-    #     imgLabel = torch.from_numpy(resize(np.asarray(imgLabel), (224, 224)))
-    #     # import pdb
-    #     # pdb.set_trace()
-    #     return imgData, imgLabel
+    def crop(self, img, label):
+        max_side = max(img.shape[:-1])
+        max_arg = np.argmax(img.shape[:-1])
+        min_side = min(img.shape[:-1])
+        min_arg = np.argmax(img.shape[:-1])
+
+        if max_side <= 224 or min_side <= 224:
+            img = cv2.resize(img, (224, 224))
+            label = cv2.resize(label, (224, 224))
+        else:
+            max_start = np.random.randint(0, max_side - 224)
+            min_start = np.random.randint(0, min_side - 224)
+            if max_arg == 0:
+                img = img[max_start:max_start+224, min_start:min_start+224]
+                label = label[max_start:max_start+224, min_start:min_start+224]
+            else:
+                img = img[min_start:min_start+224, max_start:max_start+224]
+                label = label[min_start:min_start+224, max_start:max_start+224]
+        return img, label
 
     def __len__(self):
         return len(self._data)
