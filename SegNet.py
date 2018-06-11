@@ -52,23 +52,16 @@ class SegNet(nn.Module):
         x = self.resnet.layer3(x)
         x = self.resnet.layer4(x)
         # deconvolution layers
-        # print("Starting size: {}".format(x.size()))
         x = self.deconv1(x)
         x = self.deconvRelu1(x)
-        # print("Deconv1 size: {}".format(x.size()))
         x = self.deconv2(x)
         x = self.deconvRelu2(x)
-        # print("Deconv2 size: {}".format(x.size()))
         x = self.deconv3(x)
         x = self.deconvRelu3(x)
-        # print("Deconv3 size: {}".format(x.size()))
         x = self.deconv4(x)
         x = self.deconvRelu4(x)
-        # print("Deconv4 size: {}".format(x.size()))
         x = self.deconv5(x,  output_size=original_size)
         x = self.deconvRelu5(x)
-        # print("Deconv5 size: {}".format(x.size()))
-        return x
 
     def num_flat_features(self, x):
         size = x.size()[1:]  # all dimensions except the batch dimension

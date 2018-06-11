@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 import time
 import pickle
+import sys
 import numpy as np
 from SegNet import SegNet
 
@@ -18,8 +19,10 @@ TEST_DATA_LABEL = "../mscoco_subset_cs601r/test_masks/"
 # LOSS_FILENAME = 'running_loss.pkl'
 # MODEL_FILENAME = 'model2.json'
 # LOSS_FILENAME = 'losses.pkl'
-MODEL_FILENAME = 'model3.json'
-LOSS_FILENAME = 'losses3.pkl'
+# MODEL_FILENAME = 'model3.json'
+# LOSS_FILENAME = 'losses3.pkl'
+MODEL_FILENAME = 'model4.json'
+LOSS_FILENAME = 'losses4.pkl'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -41,7 +44,7 @@ test_loader = DataLoader(test_dataset, batch_size=10,
 
 criterion = nn.CrossEntropyLoss()
 # optimizer = optim.SGD(seg.parameters(), lr=5e-4, momentum=0.9)
-optimizer = optim.Adam(seg.parameters(), lr=5e-4, weight_decay=1e-4)
+optimizer = optim.Adam(seg.parameters(), lr=5e-4)
 try:
     with open(LOSS_FILENAME, 'rb') as f:
         losses = pickle.load(f)
@@ -83,9 +86,14 @@ def test(epoch_testing_loss):
             epoch_testing_loss.append(loss.item())
 
 
+try:
+    epochs = int(sys.argv[1])
+except:
+    raise ValueError("No epoch value given")
+
 very_start = time.time()
 average_test_losses = [2.0]
-for epoch in range(1, 11):
+for epoch in range(1, epochs+1):
     start = time.time()
     epoch_training_loss = []
     epoch_testing_loss = []

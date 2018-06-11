@@ -2,14 +2,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 
-with open('running_loss.pkl', 'rb') as f:
-    running_loss = pickle.load(f)
+with open('losses4.pkl', 'rb') as f:
+    losses = pickle.load(f)
+    train_loss = losses[0]
+    test_loss = losses[1]
 
 # import pdb
 # pdb.set_trace()
-
-plt.plot(np.arange(0, 15, 15/len(running_loss)), running_loss)
-plt.title("Loss per epoch")
+plt.subplot(121)
+plt.plot(np.arange(0, 25, 25/len(train_loss)), train_loss, color='blue')
+plt.title("Training Loss per epoch")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.subplot(122)
+plt.plot(np.arange(0, 25, 25/len(test_loss)), test_loss, color='orange')
+plt.title("Test Loss per epoch")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.show()
